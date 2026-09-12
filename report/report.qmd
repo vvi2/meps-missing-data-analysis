@@ -1,0 +1,35 @@
+---
+title: "Does the missing-data method change the answer?"
+author: "Varsha Iyer, ksb9020@med.cornell.edu"
+format:
+  pdf:
+    fig-width: 7
+    fig-height: 4.5
+---
+
+## Research Question and Motivation
+
+### Question
+
+In a two-year health survey panel with real attrition i.e. MEPS, how much does the choice of missing-data method change a national estimate of healthcare expenditure and does the choice matter more when the missing data is ignorable (MAR) than when it is non-ignorable (MNAR)?
+
+### Motivation
+
+## ADEMP Table
+
+| Element | My study |
+|---|---|
+| Aims | Quantify how missing-data method choice affects mean healthcare expenditure estimate under different data dropout handling mechanisms. |
+| Data-Generating Mechanism | MEPS truth subset; ampute() at 30% under MAR/MCAR/MNAR |
+| Estimand | Mean year 2 total expenditure in truth subset |
+| Methods | Complete-case, mean imputation, MI-PMM, delta-adjusted MI |
+| Performance Measures | Bias, empirical SE, 95% coverage, each with MCSE |
+
+## Required Limitations
+Health expenditure from this survey is extremely right-skewed. A mean under 30% missingness is sensitive to a few high-cost respondents, and coverage results should be interpreted with this in mind.
+
+The truth subset being compared against is a selected, healthier-than-average population, so this truth is internal to the survey population, not the national truth.
+
+The simulation runs unweighted.
+
+## Results

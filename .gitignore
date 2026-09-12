@@ -1,0 +1,5 @@
+.DS_Store
+
+data/
+renv/library
+*.Rproj.user

@@ -12,3 +12,20 @@ This project uses data from the Medical Expenditure Panel Survey (MEPS) to build
 
 ## Project Status
 Work in progress!
+
+Using MEPS HC-217 (Panel 23, 2018-2019), to study an ordinary dropout mechanism rather than a dataset that muddles the attrition with pandemic-attributed dropout. Cleaner, pre-pandemic, simpler story for my study.
+Null Values for my Variables
+Demographic:
+- Age: AGEY1X (-1 Inapplicable)
+- Sex: SEX (none)
+- Region: REGIONY1 (-1 Inapplicable)
+Socioeconomic:
+- Income Category: POVCATY1 (-1 Inapplicable)
+- Insurance Status: INSCOVY1 (-1 Inapplicable)
+Health:
+- Self-rated health: RTHLTH1 (-8 DK, -7 Refused, -1 Inapplicable)
+- Diabetes: DIABDXY1_M18 (-8 DK, -7 Refused, -1 Inapplicable)
+Outcome (Year 1) - Predictor:
+- Total Annual Expenditure, Year 1: TOTEXPY1 (-1 Inapplicable)
+Outcome (Year 2) - Estimand target:
+- Total Annual Expenditure, Year 2: TOTEXPY2 (-1 Inapplicable)

@@ -26,6 +26,10 @@ In a two-year health survey panel with real attrition i.e. MEPS, how much does t
 | Performance Measures | Bias, empirical SE, 95% coverage, each with MCSE |
 
 ## Required Limitations
+Using MEPS HC-217 (Panel 23, 2018-2019), to study an ordinary dropout mechanism rather than a dataset that muddles the attrition with pandemic-attributed dropout. Cleaner, pre-pandemic, simpler story for my study.
+
+There is not real attrition in the original data file. So my real-world complete case vs mean imputation comparision is comparing methods on  data with very little genuine missinginess and validates choosing this study design.
+
 Health expenditure from this survey is extremely right-skewed. A mean under 30% missingness is sensitive to a few high-cost respondents, and coverage results should be interpreted with this in mind.
 
 The truth subset being compared against is a selected, healthier-than-average population, so this truth is internal to the survey population, not the national truth.

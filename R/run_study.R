@@ -5,6 +5,7 @@ library(furrr)
 source("R/run_one.R")
 
 run_study <- function(truth_set, n_reps){
+  #Parallelized version of for loop logic below it to spped the replications up
   plan(multisession, workers = parallel::detectCores() - 1)
   grid <- expand_grid(mechanism = c("MCAR", "MAR", "MNAR"), rep_num = 1:n_reps)
   results_list <- future_map2(

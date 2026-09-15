@@ -20,7 +20,7 @@ In a two-year health survey panel with real attrition i.e. MEPS, how much does t
 | Element | My study |
 |---|---|
 | Aims | Quantify how missing-data method choice affects mean healthcare expenditure estimate under different data dropout handling mechanisms. |
-| Data-Generating Mechanism | MEPS truth subset; ampute() at 30% under MAR/MCAR/MNAR |
+| Data-Generating Mechanism | Each replicate draws a bootstrap sample of MEPS truth set; ampute() at 30% under MAR/MCAR/MNAR |
 | Estimand | Mean year 2 total expenditure in truth subset |
 | Methods | Complete-case, mean imputation, MI-PMM, delta-adjusted MI |
 | Performance Measures | Bias, empirical SE, 95% coverage, each with MCSE |

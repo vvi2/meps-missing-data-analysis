@@ -3,7 +3,8 @@ source("R/estimators.R")
 library(dplyr)
 run_one <- function(truth_set, mechanism, seed){
   set.seed(seed)
-  amputated_data <- amputate_data(truth_set, mechanism)
+  boot_sample <- truth_set[sample(nrow(truth_set), replace = TRUE), ]
+  amputated_data <- amputate_data(boot_sample, mechanism)
   imputed_data <- mice(amputated_data, m = 20, method = "pmm", printFlag = FALSE)
   complete_case <- est_complete_case(amputated_data)
   mean_imputation <- est_mean_imputation(amputated_data)

@@ -3,8 +3,8 @@ title: "Does the missing-data method change the answer?"
 author: "Varsha Iyer, ksb9020@med.cornell.edu"
 format:
   pdf:
-    fig-width: 7
-    fig-height: 4.5
+    fig-width: 9
+    fig-height: 5.5
 ---
 
 ## Research Question and Motivation
@@ -37,3 +37,29 @@ The truth subset being compared against is a selected, healthier-than-average po
 The simulation runs unweighted.
 
 ## Results
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+```
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+source("R/build_truth_set.R")
+source("R/evaluate.R")
+source("R/delta_sweep.R")
+source("R/figures.R")
+data_frame <- readRDS("data/analysis_frame.rds")
+truth <- build_truth_set(data_frame)
+raw_results <- readRDS("results/raw_results.rds")
+evaluate_table <- readRDS("results/evaluate_table.rds")
+delta_sweep_results <- readRDS("results/delta_sweep.rds")
+coverage_by_mechanism_plot(evaluate_table)
+bias_by_method_plot(evaluate_table)
+tipping_point_curve(delta_sweep_results)
+```

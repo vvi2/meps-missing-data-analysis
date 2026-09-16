@@ -6,6 +6,13 @@ format:
     fig-width: 9
     fig-height: 5.5
 ---
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+```
 
 ## Research Question and Motivation
 
@@ -14,6 +21,28 @@ format:
 In a two-year health survey panel with real attrition i.e. MEPS, how much does the choice of missing-data method change a national estimate of healthcare expenditure and does the choice matter more when the missing data is ignorable (MAR) than when it is non-ignorable (MNAR)?
 
 ### Motivation
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+survey_results <- readRDS("results/survey_estimate.rds")
+
+knitr::kable(
+  data.frame(
+    Method = c("Weighted complete-case", "Weighted MI", "Difference"),
+    Estimate = c(survey_results$complete_case$estimate,
+                 survey_results$mi$estimate,
+                 survey_results$diff)
+  ),
+  digits = 2
+)
+```
+
+I calculated the target variable estimates under the complete-case and multiple imputation mechanisms on the real MEPS data (not under my simulation), so survey weights could be considered in the calculations.
+
+According to results, the multiple imputation estimate is ~$77.28 more per person than complete-case and scales to ~$25,553,153,963 total over the whole population. This implies that even on real data from a national longitudinal study, picking complete-case method over multiple imputation to handle missing data gives a different national estimate. So I conduct my simulation on different missing data mechanisms to see if this also depends on why the data is missing.
+
+This difference in the estimates is fairly small because the MEPS panel data's real attrition is limited. But my simulation creates larger, controlled amounts of artificial missingness so that the size of the effects of methods can be measured properly.
 
 ## ADEMP Table
 
@@ -28,7 +57,7 @@ In a two-year health survey panel with real attrition i.e. MEPS, how much does t
 ## Required Limitations
 Using MEPS HC-217 (Panel 23, 2018-2019), to study an ordinary dropout mechanism rather than a dataset that muddles the attrition with pandemic-attributed dropout. Cleaner, pre-pandemic, simpler story for my study.
 
-There is not real attrition in the original data file. So my real-world complete case vs mean imputation comparision is comparing methods on  data with very little genuine missinginess and validates choosing this study design.
+There is limited real attrition in the original data file. So my real-world complete case vs mean imputation comparision compared methods on the real data with very little genuine missinginess and validated choosing this study design.
 
 Health expenditure from this survey is extremely right-skewed. A mean under 30% missingness is sensitive to a few high-cost respondents, and coverage results should be interpreted with this in mind.
 
@@ -37,14 +66,6 @@ The truth subset being compared against is a selected, healthier-than-average po
 The simulation runs unweighted.
 
 ## Results
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-
-knitr::opts_knit$set(root.dir = normalizePath(".."))
-```
 ```{r}
 #| echo: false
 #| message: false

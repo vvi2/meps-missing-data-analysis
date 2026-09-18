@@ -4,7 +4,8 @@ author: "Varsha Iyer, ksb9020@med.cornell.edu"
 format:
   pdf:
     fig-width: 9
-    fig-height: 5.5
+    fig-height: 4
+    fig-pos: "H"
 ---
 ```{r}
 #| echo: false
@@ -18,7 +19,7 @@ knitr::opts_knit$set(root.dir = normalizePath(".."))
 
 ### Question
 
-In a two-year health survey panel with real attrition i.e. MEPS, how much does the choice of missing-data method change a national estimate of healthcare expenditure and does the choice matter more when the missing data is ignorable (MAR) than when it is non-ignorable (MNAR)?
+Using the Medical Expenditure Panel Survey (MEPS), a two-year health survey panel with real attrition, how much does the choice of missing-data method change a national estimate of year-2 healthcare expenditure, and does the choice matter more when the missing data is ignorable (MAR) than when it is non-ignorable (MNAR)?
 
 ### Motivation
 ```{r}
@@ -38,13 +39,17 @@ knitr::kable(
 )
 ```
 
-I calculated the target variable estimates under the complete-case and multiple imputation mechanisms on the real MEPS data (not under my simulation), so survey weights could be considered in the calculations.
+I calculated the target variable estimates under the complete-case and multiple imputation methods on the real MEPS data (not under my simulation), so survey weights could be considered in the calculations.
 
-According to results, the multiple imputation estimate is ~$77.28 more per person than complete-case and scales to ~$25,553,153,963 total over the whole population. This implies that even on real data from a national longitudinal study, picking complete-case method over multiple imputation to handle missing data gives a different national estimate. So I conduct my simulation on different missing data mechanisms to see if this also depends on why the data is missing.
+The multiple imputation estimate is ~$77 more per person than complete-case, which scales to ~$25.6 billion nationally. This implies that even on real data from a national longitudinal study, method choice gives a different national estimate. I therefore ran my simulation across different missing-data mechanisms to see whether this also depends on why the data is missing.
 
-This difference in the estimates is fairly small because the MEPS panel data's real attrition is limited. But my simulation creates larger, controlled amounts of artificial missingness so that the size of the effects of methods can be measured properly.
+This difference in the estimates is relatively small because the MEPS panel data's real attrition is limited. But my simulation created larger, controlled amounts of artificial missingness so that the size of the effect of method choice could be measured properly.
+
+Given how each method handles missingness, I expected complete-case and mean imputation to break down once dropout depends on year-1 variables (MAR), and I expected all methods to struggle under MNAR, since no method using only observed data can fully correct for missingness driven by the unobserved value itself.
 
 ## ADEMP Table
+
+Following the ADEMP framework for reporting simulation studies (Morris, White, & Crowley, 2019):
 
 | Element | My study |
 |---|---|
@@ -54,18 +59,27 @@ This difference in the estimates is fairly small because the MEPS panel data's r
 | Methods | Complete-case, mean imputation, MI-PMM, delta-adjusted MI |
 | Performance Measures | Bias, empirical SE, 95% coverage, each with MCSE |
 
-## Required Limitations
-Using MEPS HC-217 (Panel 23, 2018-2019), to study an ordinary dropout mechanism rather than a dataset that muddles the attrition with pandemic-attributed dropout. Cleaner, pre-pandemic, simpler story for my study.
+## Methods
 
-There is limited real attrition in the original data file. So my real-world complete case vs mean imputation comparision compared methods on the real data with very little genuine missinginess and validated choosing this study design.
+Before conducting the simulation study, I preprocessed the raw MEPS panel data (Agency for Healthcare Research and Quality, n.d.). I selected eight covariates covering demographic, socioeconomic, and health from the panel data, and recoded the varied values for missing and not answered to be consistently NA. From this reformatted dataset, I built a ground truth set of data along with the true estimand value, against which to compare each method's estimates and be able to calculate performance measures like bias and coverage.
 
-Health expenditure from this survey is extremely right-skewed. A mean under 30% missingness is sensitive to a few high-cost respondents, and coverage results should be interpreted with this in mind.
+To run my simulation, each replicate first drew a bootstrap resample (sampling with replacement) from the truth set, rather than reusing the same fixed set every time. This step matters: an earlier version of the harness amputated the same fixed truth set on every replicate, and the only thing that varied between replicates was which values happened to get deleted, not who was in the sample. That understated how much a real estimate would bounce around, which showed up as overcoverage. Resampling the truth set first restores that missing source of variability.
 
-The truth subset being compared against is a selected, healthier-than-average population, so this truth is internal to the survey population, not the national truth.
+I then amputated the estimand (year-2 total expenditure or TOTEXPY2) in each bootstrap sample under the three missing data mechanisms (Rubin, 1976), which mirror three potential reasons for why attrition occurred. Using ampute() from R's mice package, I mirrored the missingness:
 
-The simulation runs unweighted.
+1. Missing Completely at Random (MCAR, rare case in health data): amputation of TOTEXPY2 is random
+2. Missing at Random (MAR, ignorable dropout): amputation of TOTEXPY2 depends only on observed variables. In this study, these variables are year-1 total expenditure (TOTEXPY1) and year-1 self rated health (RTHLTH1), and were chosen because sicker/costlier cases are more likely to drop in year 2.
+3. Missing Not at Random (MNAR, non-ignorable dropout): amputation of TOTEXPY2 depends on the target variable itself. People dropout solely because their year 2 expenditure is too costly.
+
+I tested four different methods for handling missing data to compare the performance of each:
+
+1. Complete case: delete the participants with missing TOTEXPY2 values.
+2. Mean imputation: impute missing values with the mean of existing TOTEXPY2 values.
+3. Multiple imputation by predictive mean matching (~20 imputations): for each missing value, find participants with similar predicted TOTEXPY2 and copy one value. Repeat this process across 20 imputed datasets, then combine the 20 estimates using Rubin's rules. The pooled estimate is their average, and the pooled variance combines the average within-dataset variance with the variance between datasets, reflecting uncertainty about the missing values.
+4. Delta-adjusted multiple imputation (sensitivity analysis): shifts MAR multiple imputation by delta and compares estimates. This method tests how large the hidden MNAR effect would need to be before it changes the substantive conclusion, not whether MI is accurate, since under MNAR no method's estimate can be verified against the truth from observed data alone. In the main 500-replicate simulation seen in Results, this arm uses delta = 0 as a baseline, so its results are identical to MI-PMM's; the delta sweep itself, across a grid of nonzero values, is run separately under MNAR in the sensitivity analysis, which can also be seen in Results.
 
 ## Results
+
 ```{r}
 #| echo: false
 #| message: false
@@ -80,7 +94,86 @@ truth <- build_truth_set(data_frame)
 raw_results <- readRDS("results/raw_results.rds")
 evaluate_table <- readRDS("results/evaluate_table.rds")
 delta_sweep_results <- readRDS("results/delta_sweep.rds")
+```
+
+The table below reports bias, empirical standard error, and 95% coverage for each method under each missingness mechanism, based on 500 simulated replicates per mechanism. Monte Carlo standard errors are shown alongside each estimate so that differences between methods can be judged against potential noise in the simulation, rather than assumed to be real.
+
+```{r}
+#| echo: false
+#| output: asis
+method_labels <- c(
+  complete_case = "Complete-case",
+  mean_imputation = "Mean imputation",
+  mi_pmm = "MI-PMM",
+  mi_delta = "Delta-adjusted MI"
+)
+evaluate_table_display <- evaluate_table
+evaluate_table_display$method <- method_labels[evaluate_table_display$method]
+
+cat("\\footnotesize\n")
+cat(knitr::kable(
+  evaluate_table_display,
+  format = "latex",
+  booktabs = TRUE,
+  col.names = c("Mechanism", "Method", "Bias", "Emp. SE", "Coverage",
+                "MCSE (Bias)", "MCSE (SE)", "MCSE (Cov.)"),
+  digits = c(0, 0, 0, 0, 3, 1, 1, 3)
+), sep = "\n")
+cat("\n\\normalsize\n")
+```
+
+Under MCAR, all methods perform close to their nominal level: bias is near zero and coverage is close to 95% for complete-case, MI-PMM, and delta-adjusted MI. The one exception is mean imputation, whose coverage falls to 83% even though its point estimate matches complete-case exactly, showing that mean imputation gets the average correct but understates uncertainty, so its confidence intervals are too narrow.
+Under MAR, complete-case and mean imputation are both substantially biased (about $1,626), and their coverage drops to 0%: not one of the 500 replicates' intervals contained the truth. MI-PMM and delta-adjusted MI are less biased (~$194) but still fall short of 95% coverage, at 68%. This is the expected story. MI is built for the MAR mechanism and clearly outperforms complete-case, but is not a full fix.
+Under MNAR, no method accurately computes the true estimate. Complete-case bias grows to ~$3,023 and MI-PMM, while somewhat better at ~$2,622, still has 0% coverage. This is consistent with the underlying theory: MNAR means missingness depends on the very value it's missing, and no method that only uses observed data can account for that without an outside assumption, which is what the delta-adjustment sensitivity analysis below tests.
+
+```{r}
+#| echo: false
 coverage_by_mechanism_plot(evaluate_table)
+```
+
+In Figure 1, each point shows the share of 500 replicate confidence intervals that contained the true value. Points on the dashed line are correctly calibrated; points below it are overconfident, missing the truth more often than they should. Complete-case and mean imputation fall well below the line under MAR and MNAR.
+
+```{r}
+#| echo: false
 bias_by_method_plot(evaluate_table)
+```
+
+In Figure 2, each point shows a method's average distance from the true value across 500 replicates, with error bars $\pm$ Monte Carlo standard errors. Error bars that don't cross the dashed zero line indicate bias is too large to be simulation noise. Complete-case shows the largest such bias under MAR and MNAR.
+
+Because MNAR cannot be verified from the data, I tested how sensitive the MI-PMM conclusion is to an unverifiable assumption about how much sicker the dropouts really were, using delta-adjusted MI. I define the method's conclusion as "flipped" when the delta-adjusted MI interval no longer overlaps the complete-case, meaning the two methods gave different expenditure estimates.
+
+```{r}
+#| echo: false
 tipping_point_curve(delta_sweep_results)
 ```
+
+In Figure 3, which shows the sensitivity analysis, the conclusion "flip" happened at delta=0. Without additional shift, the MI-PMM interval ($3,970–$4,272) and the complete-case interval ($3,646–$3,929) did not overlap. Under MNAR, these two methods disagree with each other from the start, with no extra assumption.
+However, this result does not mean MI-PMM is correct. Both intervals sit far below the true mean expenditure value ($6,719), meaning both methods are already biased before any delta adjustment. The finding is that method choice matters under MNAR from the start and not that MI-PMM is confirmed to be more accurate once it disagrees with complete-case estimates.
+
+## Discussion
+
+This study set out to answer a small, but concrete question with two parts: on a longitudinal study, does the choice of missing-data handling method change a national expenditure estimate, and does that choice matter more when dropout is ignorable (MAR) than not (MNAR)?
+
+The simulation answers both parts, but the answer depends entirely on the mechanism. Under MCAR, method choice is nearly inconsequential, matching the textbook expectation that complete-case analysis loses precision but not accuracy when dropout is unrelated to the data. Under MAR, method choice becomes consequential: this is precisely the mechanism MI is designed for, and the results show why the field has settled on it as the default over complete-case analysis. Under MNAR, method choice still matters in the sense that the methods visibly disagree with each other, but that comparison is a warning rather than a solution. No method examined here recovers the truth, and MI-PMM's apparent improvement over complete-case does not mean it can be trusted. The practical risk of MNAR is not only bias but false confidence: MI-PMM still reports a narrow, confident interval, it is just narrow around the wrong number.
+
+The real-data comparison in the Motivation section showed how switching from complete-case to MI changed the estimate by about $77 per person or around $25.6 billion nationally, even though the raw MEPS data had small year-2 attrition. The simulation suggests that if attrition in a future panel were close to MAR or MNAR at higher rates, the gap between method estimates could be drastically larger.
+
+## Limitations
+
+Using MEPS HC-217 (Panel 23, 2018-2019), to study an ordinary dropout mechanism rather than a dataset that muddles the attrition with pandemic-attributed dropout. Cleaner, pre-pandemic, simpler story for my study.
+
+There is limited real attrition in the original data file. So my real-world complete-case vs multiple imputation comparison compared methods on the real data with very little genuine missingness and supports the choice of this study design.
+
+Health expenditure from this survey is extremely right-skewed. A mean under 30% missingness is sensitive to a few high-cost respondents, and coverage results should be interpreted with this in mind. A natural next step would be a log-scale or two-part model for expenditure to address this skew.
+
+The truth subset being compared against is a selected, healthier-than-average population, so this truth is internal to the survey population, not the national truth.
+
+The simulation runs unweighted.
+
+## References
+
+Agency for Healthcare Research and Quality. (n.d.). *Medical Expenditure Panel Survey, Panel 23 Longitudinal Data File (HC-217)*. https://meps.ahrq.gov/mepsweb/data_files/pufs/h217/h217dta.zip
+
+Morris, T. P., White, I. R., & Crowley, E. M. (2019). Using simulation studies to evaluate statistical methods. *Statistics in Medicine*, 38(11), 2074–2102.
+
+Rubin, D. B. (1976). Inference and missing data. *Biometrika*, 63(3), 581–592.

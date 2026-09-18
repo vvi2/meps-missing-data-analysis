@@ -43,10 +43,6 @@ Requires [R](https://www.r-project.org/), [Quarto](https://quarto.org), and inte
 
 **Runtime:** a few minutes end to end — the 500-replicate simulation is the slowest step, but each replicate is small.
 
-## Project status
-
-Complete. Simulation (500 replicates × 3 mechanisms × 4 methods) with Monte Carlo standard errors, a delta-adjusted sensitivity analysis with a tipping point, three result figures, a real-data survey-weighted comparison, and a full written report.
-
 ### Data notes
 
 Using MEPS HC-217 (Panel 23, 2018–2019) rather than a later panel, to study ordinary attrition without the 2020 pandemic-era collection changes muddying the picture.

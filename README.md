@@ -45,7 +45,7 @@ Requires [R](https://www.r-project.org/), [Quarto](https://quarto.org), and inte
 
 ### Data notes
 
-Using MEPS HC-217 (Panel 23, 2018–2019) rather than a later panel, to study ordinary attrition without the 2020 pandemic-era collection changes muddying the picture.
+Using MEPS HC-217 (Panel 23, 2018–2019), to study ordinary attrition without COVID-19 collection changes.
 
 Missing/non-response codes by variable:
 
